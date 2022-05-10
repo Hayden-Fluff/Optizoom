@@ -24,6 +24,12 @@ namespace Optizoom
         [AutoRegisterConfigKey]
         public static readonly ModConfigurationKey<float> ZoomFOV =
             new ModConfigurationKey<float>("zoomFOV", "Zoom FOV", () => 20f);
+        [AutoRegisterConfigKey]
+        public static readonly ModConfigurationKey<bool> UseMouse =
+            new ModConfigurationKey<bool>("useMouse", "Use Mouse Button", () => true);
+        [AutoRegisterConfigKey]
+        public static readonly ModConfigurationKey<MouseButton> Button =
+            new ModConfigurationKey<MouseButton>("MouseButton", "Mouse Button", () => MouseButton.Button4);
 
 
 
@@ -58,16 +64,32 @@ namespace Optizoom
                 }
                 if (config == null) return;
 
-                
 
+                Chirality userChiraliry = Settings.ReadValue("Settings.Input.User.PrimaryHand", Chirality.Right);
+                User localUser = __instance.LocalUser;
+                UserRoot root = localUser.Root;
+                CommonTool currentCommonTool = root.GetRegisteredComponent((CommonTool c) => (Chirality)c.Side == userChiraliry);
+                IToolTip? currentToolTip = currentCommonTool.ActiveToolTip; // *1
+                    if (currentToolTip == null) { return; }
+                bool? tipUsesSecondary = false; //*1
+                    if (tipUsesSecondary == null) { return; }
 
-                var flag =  config.GetValue(Enabled)
+                // *1: If a ToolTip is not equipped, a NRE is thrown, crashing the world.
+
+                var flag = config.GetValue(Enabled)
                         && !__instance.LocalUser.HasActiveFocus() // Not focused in any field
                         && !Userspace.HasFocus // Not focused in userspace field
                         && __instance.Engine.WorldManager.FocusedWorld == __instance.World // Focused in the same world as the UserRoot
-                        && __instance.InputInterface.GetKey(config.GetValue(ZoomKey)); // Key pressed
+                        && currentToolTip == null //Check if a tool is in use, thanks for the help on this one Cyro
+                        && config.GetValue(Button) == MouseButton.Button4
+                        ? !tipUsesSecondary
+                        : true
+                        //&& tipUsesSecondary == false
+                        && config.GetValue(UseMouse) 
+                        ? __instance.InputInterface.Mouse[config.GetValue(Button)].Held //Use mouse button if UseMouse is checked
+                        : __instance.InputInterface.GetKey(config.GetValue(ZoomKey)); // Else use ZoomKey  
 
-                float target = flag ? Settings.ReadValue("Settings.Graphics.DesktopFOV", 60f) - config.GetValue(ZoomFOV) : 0f;//__result;
+                float target = (bool)flag ? Settings.ReadValue("Settings.Graphics.DesktopFOV", 60f) - config.GetValue(ZoomFOV) : 0f;//__result;
 
                 if (config.GetValue(LerpZoom))
                 {
@@ -78,7 +100,6 @@ namespace Optizoom
                     __result -= target;
                 }
 
-                
                 __result = MathX.FilterInvalid(__result, 60f); // fallback to 60 fov if invalid
                 __result = MathX.Clamp(__result, 1f, 179f);
 
