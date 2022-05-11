@@ -10,9 +10,9 @@ namespace Optizoom
     public class Optizoom : NeosMod
     {
         public override string Name => "Optizoom";
-        public override string Author => "badhaloninja";
-        public override string Version => "1.1.0";
-        public override string Link => "https://github.com/badhaloninja/Optizoom";
+        public override string Author => "Hayden";
+        public override string Version => "1.2.0";
+        public override string Link => "https://github.com/Hayden-Fluff/Optizoom";
 
 
         [AutoRegisterConfigKey]
@@ -46,7 +46,7 @@ namespace Optizoom
         {
             config = GetConfiguration();
 
-            Harmony harmony = new Harmony("me.badhaloninja.Optizoom");
+            Harmony harmony = new Harmony("me.Hayden.Optizoom");
             harmony.PatchAll();
         }
 
@@ -84,7 +84,6 @@ namespace Optizoom
                         && config.GetValue(Button) == MouseButton.Button4
                         ? !tipUsesSecondary
                         : true
-                        //&& tipUsesSecondary == false
                         && config.GetValue(UseMouse) 
                         ? __instance.InputInterface.Mouse[config.GetValue(Button)].Held //Use mouse button if UseMouse is checked
                         : __instance.InputInterface.GetKey(config.GetValue(ZoomKey)); // Else use ZoomKey  
