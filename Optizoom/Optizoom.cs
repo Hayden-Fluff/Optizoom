@@ -33,7 +33,9 @@ namespace Optizoom
         [AutoRegisterConfigKey]
         public static readonly ModConfigurationKey<bool> ZoomToggle =
             new ModConfigurationKey<bool>("ZoomToggled", "Zoom Toggle", () => false);
-
+        [AutoRegisterConfigKey]
+        public static readonly ModConfigurationKey<bool> AllowSecondaryConflict =
+            new ModConfigurationKey<bool>("AllowSecondaryConflict", "Allow Secondary Conflict", () => false);
 
 
         [AutoRegisterConfigKey]
@@ -75,58 +77,51 @@ namespace Optizoom
                     ? __instance.InputInterface.Mouse[config.GetValue(Button)].Pressed
                     : __instance.InputInterface.GetKeyDown(config.GetValue(ZoomKey));
 
+                bool otherChecks = !__instance.LocalUser.HasActiveFocus() // Not focused in any field
+                    && !Userspace.HasFocus // Not focused in userspace field
+                    && __instance.Engine.WorldManager.FocusedWorld == __instance.World; // Focused in the same world as the UserRoot
+
                 Chirality userChiraliry = Settings.ReadValue("Settings.Input.User.PrimaryHand", Chirality.Right);
                 User localUser = __instance.LocalUser;
                 UserRoot root = localUser.Root;
                 CommonTool currentCommonTool = root.GetRegisteredComponent((CommonTool c) => (Chirality)c.Side == userChiraliry);
                 IToolTip? currentToolTip = currentCommonTool.ActiveToolTip; // If a ToolTip is not equipped, a NRE is thrown, crashing the world.
-                    if (currentToolTip == null) { return; }
-                bool hasToolTip = currentToolTip != null; //Check if a tool is in use, thanks for the help on this one Cyro
-                bool secondaryConflict = config.GetValue(UseMouse) ? config.GetValue(Button) == MouseButton.Button4 : config.GetValue(ZoomKey) == Key.R;
-                
+                bool hasToolTip; //= currentToolTip != null; //Check if a tool is in use, thanks for the help on this one Cyro
+                if (currentToolTip == null) 
+                {
+                    hasToolTip = false;
+                    if (__instance.InputInterface.Mouse[config.GetValue(Button)].Pressed && otherChecks)
+                    {
+                        Msg("Has Tool Tip:" + hasToolTip);
+                    }
+                    return;
+                }
+                else
+                {
+                    hasToolTip = true;
+                }
+                bool secondaryConflict = config.GetValue(UseMouse)
+                        ? config.GetValue(Button) == MouseButton.Button4
+                        : config.GetValue(ZoomKey) == Key.R
+                    && !config.GetValue(AllowSecondaryConflict);
+
                 bool zoom = zoomKeySet;
 
-                //if (currentToolTip == null)
-                //{
-                //    hasToolTip = false;
-                //}
-
-                //switch (config.GetValue(ZoomToggle))
-                //{
-                //    case true:
-                //        zoom = false;
-                //        if (zoomKeyToggle)
-                //            zoom = !zoom;
-                //        break;
-                //
-                //    case false:
-                //        zoom = zoomKeySet;
-                //        break;
-                //}
-
-                bool otherChecks = !__instance.LocalUser.HasActiveFocus() // Not focused in any field
-                    && !Userspace.HasFocus // Not focused in userspace field
-                    && __instance.Engine.WorldManager.FocusedWorld == __instance.World; // Focused in the same world as the UserRoot
 
                 var flag = secondaryConflict
-                            ? !hasToolTip && zoom && otherChecks
-                            : zoom && otherChecks
-                        && config.GetValue(Enabled);
-
+                        ? !hasToolTip && zoom
+                        : zoom
+                    & otherChecks
+                    && config.GetValue(Enabled);
+                        
+                
                 if (__instance.InputInterface.Mouse[config.GetValue(Button)].Pressed && otherChecks)
                 {
-                    Msg("Has Tooltip:",
-                        hasToolTip,
-                        "Zoom:",
-                        zoom,
-                        "Zoom Key Set:",
-                        zoomKeySet,
-                        "Zoom Key Toggle:",
-                        zoomKeyToggle,
-                        "Other Checks:",
-                        otherChecks,
-                        "Secondary Conflict:",
-                        secondaryConflict,
+                    Msg("Zoom:" + zoom,
+                        "Zoom Key Set:" + zoomKeySet,
+                        "Zoom Key Toggle:" + zoomKeyToggle,
+                        "Other Checks:" + otherChecks,
+                        "Secondary Conflict:" + secondaryConflict,
                         __instance.World,
                         currentToolTip?.GetType());
                 }

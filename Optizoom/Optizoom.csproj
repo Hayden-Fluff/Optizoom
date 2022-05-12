@@ -74,7 +74,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy "$(TargetDir)$(TargetFileName)" "E:\SteamLibrary\steamapps\common\NeosVR\nml_mods" &amp;&amp; powershell -Command "Start-Process -FilePath 'E:\SteamLibrary\steamapps\common\NeosVR\StartModDebug.cmd' -Verb RunAs"</PostBuildEvent>
+    <PostBuildEvent>copy "$(TargetDir)$(TargetFileName)" "E:\SteamLibrary\steamapps\common\NeosVR\nml_mods"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <StartAction>Program</StartAction>
