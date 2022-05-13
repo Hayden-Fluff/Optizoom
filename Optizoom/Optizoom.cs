@@ -85,21 +85,8 @@ namespace Optizoom
                 User localUser = __instance.LocalUser;
                 UserRoot root = localUser.Root;
                 CommonTool currentCommonTool = root.GetRegisteredComponent((CommonTool c) => (Chirality)c.Side == userChiraliry);
-                IToolTip? currentToolTip = currentCommonTool.ActiveToolTip; // If a ToolTip is not equipped, a NRE is thrown, crashing the world.
-                bool hasToolTip; //= currentToolTip != null; //Check if a tool is in use, thanks for the help on this one Cyro
-                if (currentToolTip == null) 
-                {
-                    hasToolTip = false;
-                    if (__instance.InputInterface.Mouse[config.GetValue(Button)].Pressed && otherChecks)
-                    {
-                        Msg("Has Tool Tip:" + hasToolTip);
-                    }
-                    return;
-                }
-                else
-                {
-                    hasToolTip = true;
-                }
+                IToolTip? currentToolTip = currentCommonTool.ActiveToolTip == null ? null : currentCommonTool.ActiveToolTip; // Don't try to log this, it will throw an NRE and crash the world!!!
+                bool hasToolTip = currentToolTip != null; // Check if a tool is in use, thanks for the help on this one Cyro
                 bool secondaryConflict = config.GetValue(UseMouse)
                         ? config.GetValue(Button) == MouseButton.Button4
                         : config.GetValue(ZoomKey) == Key.R
@@ -107,24 +94,23 @@ namespace Optizoom
 
                 bool zoom = zoomKeySet;
 
-
                 var flag = secondaryConflict
-                        ? !hasToolTip && zoom
+                        ? !hasToolTip && zoom && !currentToolTip.UsesSecondary
                         : zoom
                     & otherChecks
                     && config.GetValue(Enabled);
                         
                 
-                if (__instance.InputInterface.Mouse[config.GetValue(Button)].Pressed && otherChecks)
-                {
-                    Msg("Zoom:" + zoom,
-                        "Zoom Key Set:" + zoomKeySet,
-                        "Zoom Key Toggle:" + zoomKeyToggle,
-                        "Other Checks:" + otherChecks,
-                        "Secondary Conflict:" + secondaryConflict,
-                        __instance.World,
-                        currentToolTip?.GetType());
-                }
+                //if (__instance.InputInterface.Mouse[config.GetValue(Button)].Pressed && otherChecks)
+                //{
+                //    Msg("Zoom:" + zoom,
+                //        "Zoom Key Set:" + zoomKeySet,
+                //        "Zoom Key Toggle:" + zoomKeyToggle,
+                //        "Other Checks:" + otherChecks,
+                //        "Secondary Conflict:" + secondaryConflict,
+                //        __instance.World,
+                //        currentToolTip?.GetType()); // This will crash
+                //}
 
                 float target = flag ? Settings.ReadValue("Settings.Graphics.DesktopFOV", 60f) - config.GetValue(ZoomFOV) : 0f;//__result;
 
