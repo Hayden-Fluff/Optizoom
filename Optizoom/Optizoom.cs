@@ -10,7 +10,7 @@ namespace Optizoom
     public class Optizoom : NeosMod
     {
         public override string Name => "Optizoom";
-        public override string Author => "Hayden";
+        public override string Author => "badhaloninja & Hayden";
         public override string Version => "1.2.0";
         public override string Link => "https://github.com/Hayden-Fluff/Optizoom";
 
