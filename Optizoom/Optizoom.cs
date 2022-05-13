@@ -59,6 +59,9 @@ namespace Optizoom
         class Optizoom_Patch
         {
             static Dictionary<UserRoot, UserRootFOVLerps> lerps = new Dictionary<UserRoot, UserRootFOVLerps>();
+            
+            private static double _lastSetTime;
+            private static bool zoom;
 
             public static void Postfix(UserRoot __instance, ref float __result)
             {
@@ -85,21 +88,35 @@ namespace Optizoom
                 User localUser = __instance.LocalUser;
                 UserRoot root = localUser.Root;
                 CommonTool currentCommonTool = root.GetRegisteredComponent((CommonTool c) => (Chirality)c.Side == userChiraliry);
-                IToolTip? currentToolTip = currentCommonTool.ActiveToolTip == null ? null : currentCommonTool.ActiveToolTip; // Don't try to log this, it will throw an NRE and crash the world!!!
+                IToolTip? currentToolTip = currentCommonTool.ActiveToolTip;// == null ? null : currentCommonTool.ActiveToolTip; // Don't try to log this, it will throw an NRE and crash the world!!!
                 bool hasToolTip = currentToolTip != null; // Check if a tool is in use, thanks for the help on this one Cyro
                 bool secondaryConflict = config.GetValue(UseMouse)
                         ? config.GetValue(Button) == MouseButton.Button4
-                        : config.GetValue(ZoomKey) == Key.R
-                    && !config.GetValue(AllowSecondaryConflict);
+                        : config.GetValue(ZoomKey) == Key.R;
 
-                bool zoom = zoomKeySet;
+                //bool zoom = false;// = zoomKeySet;
 
-                var flag = secondaryConflict
-                        ? !hasToolTip && zoom && !currentToolTip.UsesSecondary
+
+                if (config.GetValue(ZoomToggle))
+                {
+
+                    if (zoomKeyToggle && _lastSetTime != __instance.World.Time.WorldTime && otherChecks)
+                    {
+                        _lastSetTime = __instance.World.Time.WorldTime;
+                        Msg("Hey, you pressed the zoom button at " + __instance.World.Time.WorldTime +  " in" + __instance.World.Name);
+                        zoom = !zoom;
+                    }
+                }
+                else
+                {
+                    zoom = zoomKeySet;
+                }
+
+                var flag = secondaryConflict & !config.GetValue(AllowSecondaryConflict)
+                        ? !hasToolTip && zoom
                         : zoom
                     & otherChecks
                     && config.GetValue(Enabled);
-                        
                 
                 //if (__instance.InputInterface.Mouse[config.GetValue(Button)].Pressed && otherChecks)
                 //{
