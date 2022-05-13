@@ -88,14 +88,11 @@ namespace Optizoom
                 User localUser = __instance.LocalUser;
                 UserRoot root = localUser.Root;
                 CommonTool currentCommonTool = root.GetRegisteredComponent((CommonTool c) => (Chirality)c.Side == userChiraliry);
-                IToolTip? currentToolTip = currentCommonTool.ActiveToolTip;// == null ? null : currentCommonTool.ActiveToolTip; // Don't try to log this, it will throw an NRE and crash the world!!!
+                IToolTip? currentToolTip = currentCommonTool.ActiveToolTip; // Don't try to log this, it will throw an NRE and crash the world!!!
                 bool hasToolTip = currentToolTip != null; // Check if a tool is in use, thanks for the help on this one Cyro
                 bool secondaryConflict = config.GetValue(UseMouse)
                         ? config.GetValue(Button) == MouseButton.Button4
                         : config.GetValue(ZoomKey) == Key.R;
-
-                //bool zoom = false;// = zoomKeySet;
-
 
                 if (config.GetValue(ZoomToggle))
                 {
